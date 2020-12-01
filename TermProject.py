@@ -3,66 +3,69 @@ import math, random
 
 class MyApp(App):
     def appStarted(self):
+        #sets rows, columns, margins, and cell specifications for the board grids
         self.rows = 25
         self.cols = 24
         self.leftMargin = 350
         self.rightMargin = 350
         self.topMargin = 75
         self.bottomMargin = 25
-
         self.gridWidth = self.width - self.rightMargin - self.leftMargin
         self.gridHeight = self.height - self.bottomMargin - self.topMargin
         self.cellWidth = self.gridWidth / self.cols
         self.cellHeight = self.gridHeight / self.rows
 
+        #sets the rows for the notebook's grid
         self.suspectRows = 6
         self.weaponsRows = 6
         self.roomsRows = 9
 
+        #sets booleans for the buttons as False, thus not appearing at the start of the game
         self.showInstructions = False
         self.showNotepad = False
         self.showAnswer = False
 
         #The game board image is from https://i.pinimg.com/originals/76/a2/4f/76a24fda5952a89008dcb15ae71df4ef.jpg
         #(I edited the image a little myself before importing it)
-        self.boardImage = self.loadImage('gameboard.png')
+        self.boardImage = self.loadImage('Images/gameboard.png')
         self.boardScaled = self.scaleImage(self.boardImage, 0.84)
         #The detective's notebook image from https://lh5.googleusercontent.com/proxy/iAVqoH9sg6jtlAKFF1b-N_HKaaRSX7VpmTtnLfDSs6wK6ri4NKuYYa7hdILXSQmisjjZ_uhyGhDwRK8Kp24YmlQTyLL02ij2Xctic2KrTSp8ViCYihYC=s0-d
         url2 = 'https://tinyurl.com/y53wvzq5'
         self.notepadImage = self.loadImage(url2)
         self.notepadScaled = self.scaleImage(self.notepadImage, 0.60)
         #All die side images were edited from https://image.shutterstock.com/image-vector/dice-cartoon-icons-set-traditional-260nw-1437137303.jpg
-        self.die1 = self.scaleImage(self.loadImage('die1.png'), 0.40)
-        self.die2 = self.scaleImage(self.loadImage('die2.png'), 0.40)
-        self.die3 = self.scaleImage(self.loadImage('die3.png'), 0.40)
-        self.die4 = self.scaleImage(self.loadImage('die4.png'), 0.40)
-        self.die5 = self.scaleImage(self.loadImage('die5.png'), 0.40)
-        self.die6 = self.scaleImage(self.loadImage('die6.png'), 0.40)
+        self.die1 = self.scaleImage(self.loadImage('Images/Dice/die1.png'), 0.40)
+        self.die2 = self.scaleImage(self.loadImage('Images/Dice/die2.png'), 0.40)
+        self.die3 = self.scaleImage(self.loadImage('Images/Dice/die3.png'), 0.40)
+        self.die4 = self.scaleImage(self.loadImage('Images/Dice/die4.png'), 0.40)
+        self.die5 = self.scaleImage(self.loadImage('Images/Dice/die5.png'), 0.40)
+        self.die6 = self.scaleImage(self.loadImage('Images/Dice/die6.png'), 0.40)
         self.dice = [self.die1, self.die2, self.die3, self.die4, self.die5, self.die6]
         self.currDice = self.die1
         #all images of the game cards were scanned from the physical game and then edited by me
         #room images
-        self.library = self.scaleImage(self.loadImage('library.jpg'), 0.40)
-        self.diningRoom = self.scaleImage(self.loadImage('diningRoom.jpg'), 0.40)
-        self.lounge = self.scaleImage(self.loadImage('lounge.jpg'), 0.40)
-        self.ballroom = self.scaleImage(self.loadImage('ballroom.jpg'), 0.40)
-        self.billiardRoom = self.scaleImage(self.loadImage('billiardRoom.jpg'), 0.40)
-        self.hall = self.scaleImage(self.loadImage('hall.jpg'), 0.40)
-        self.kitchen = self.scaleImage(self.loadImage('kitchen.jpg'), 0.40)
-        self.conservatory = self.scaleImage(self.loadImage('conservatory.jpg'), 0.40)
-        self.study = self.scaleImage(self.loadImage('study.jpg'), 0.40)
+        self.library = self.scaleImage(self.loadImage('Images/Rooms/library.jpg'), 0.40)
+        self.diningRoom = self.scaleImage(self.loadImage('Images/Rooms/diningRoom.jpg'), 0.40)
+        self.lounge = self.scaleImage(self.loadImage('Images/Rooms/lounge.jpg'), 0.40)
+        self.ballroom = self.scaleImage(self.loadImage('Images/Rooms/ballroom.jpg'), 0.40)
+        self.billiardRoom = self.scaleImage(self.loadImage('Images/Rooms/billiardRoom.jpg'), 0.40)
+        self.hall = self.scaleImage(self.loadImage('Images/Rooms/hall.jpg'), 0.40)
+        self.kitchen = self.scaleImage(self.loadImage('Images/Rooms/kitchen.jpg'), 0.40)
+        self.conservatory = self.scaleImage(self.loadImage('Images/Rooms/conservatory.jpg'), 0.40)
+        self.study = self.scaleImage(self.loadImage('Images/Rooms/study.jpg'), 0.40)
         #weapons images
-        self.candlestick = self.scaleImage(self.loadImage('candlestick.jpg'), 0.40)
-        self.revolver = self.scaleImage(self.loadImage('revolver.jpg'), 0.40)
-        self.leadPipe = self.scaleImage(self.loadImage('leadPipe.jpg'), 0.40)
-        self.rope = self.scaleImage(self.loadImage('rope.jpg'), 0.40)
-        self.knife = self.scaleImage(self.loadImage('knife.jpg'), 0.40)
-        self.wrench = self.scaleImage(self.loadImage('wrench.jpg'), 0.40)
+        self.candlestick = self.scaleImage(self.loadImage('Images/Weapons/candlestick.jpg'), 0.40)
+        self.revolver = self.scaleImage(self.loadImage('Images/Weapons/revolver.jpg'), 0.40)
+        self.leadPipe = self.scaleImage(self.loadImage('Images/Weapons/leadPipe.jpg'), 0.40)
+        self.rope = self.scaleImage(self.loadImage('Images/Weapons/rope.jpg'), 0.40)
+        self.knife = self.scaleImage(self.loadImage('Images/Weapons/knife.jpg'), 0.40)
+        self.wrench = self.scaleImage(self.loadImage('Images/Weapons/wrench.jpg'), 0.40)
         #suspects images
-        self.white = self.scaleImage(self.loadImage('white.jpg'), 0.40)
-        self.green = self.scaleImage(self.loadImage('green.jpg'), 0.40)
-        self.peacock = self.scaleImage(self.loadImage('peacock.jpg'), 0.40)
+        self.white = self.scaleImage(self.loadImage('Images/Suspects/white.jpg'), 0.40)
+        self.green = self.scaleImage(self.loadImage('Images/Suspects/green.jpg'), 0.40)
+        self.peacock = self.scaleImage(self.loadImage('Images/Suspects/peacock.jpg'), 0.40)
 
+        #setting initial board and player values
         self.playerColor = "black"
         self.choosePlayer = True
         self.notepadFillColor = "green"
@@ -71,6 +74,7 @@ class MyApp(App):
         self.player1end = (-1, -1)
         self.moveList = []
         self.fillColor = ""
+        #sets all rooms as grey on the grid
         self.roomColor = "grey"
         self.roomsList = [(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(0,9),(0,10),(0,11),(0,12),(0,13),(0,14),
                 (0,17),(0,18),(0,19),(0,20),(0,21),(0,22),(0,23),
@@ -103,13 +107,16 @@ class MyApp(App):
                 (22,18),(22,19),(22,20),(22,21),(22,22),(22,23),
                 (23,0),(23,1),(23,2),(23,3),(23,4),(23,5),(23,10),(23,11),(23,12),(23,13),(23,19),(23,20),(23,21),(23,22),(23,23),
                 (24,0),(24,1),(24,2),(24,3),(24,4),(24,5),(24,10),(24,11),(24,12),(24,13),(24,18),(24,19),(24,20),(24,21),(24,22),(24,23)]
+        #sets all doors as pink on the grid
         self.doorColor = "pink"
         self.doorsList = [(3,6),(4,9),(5,17),(6,11),(6,12),(8,6),(9,17),(10,3),
                         (12,1),(12,16),(15,5),(17,9),(17,14),(18,19),(19,4),(19,8),(19,15)]
+        #sets stairs as orange and cyan
         self.stair1color = "orange"
         self.stair1list = [(3,0),(23,18)]
         self.stair2color = "cyan"
         self.stair2list = [(5,23),(19,1)]
+        #sets the center room as magenta
         self.centerRoomColor = "magenta"
         self.centerRoomList = [(8,9),(8,10),(8,11),(8,12),(8,13),
                             (9,9),(9,10),(9,11),(9,12),(9,13),
@@ -118,11 +125,14 @@ class MyApp(App):
                             (12,9),(12,10),(12,11),(12,12),(12,13),
                             (13,9),(13,10),(13,11),(13,12),(13,13),
                             (14,9),(14,10),(14,11),(14,12),(14,13)]
+        #sets the empty list for the path the player must take to reach its destination
         self.path = []
 
     #executes when mouse is clicked by the user
     def mousePressed(self, event):
+        #stores clicks as cells on the board
         (boardRow, boardCol) = self.getBoardCell(event.x, event.y)
+        #if the click is within the board, it appends that cells to the move list
         if 0 <= boardRow < self.rows and 0 <= boardCol < self.cols:
             self.player1 = (boardRow, boardCol)
             self.moveList.append((boardRow, boardCol))
@@ -130,6 +140,8 @@ class MyApp(App):
             self.path = self.pathfinding(self.moveList[0], self.moveList[1])
             self.moveList = []
 
+        #if the player clicks on the buttons, the boolean for that button becomes the oppposite
+        #(true to false or false to true)
         if 25 <= event.x <= 75 and (self.height - 75) <= event.y <= (self.height - 25):
             self.showInstructions = not self.showInstructions
         if 100 <= event.x <= 150 and (self.height - 75) <= event.y <= (self.height - 25):
@@ -139,15 +151,19 @@ class MyApp(App):
         if 250 <= event.x <= 300 and (self.height - 75) <= event.y <= (self.height - 25):
             self.appStarted()
 
+        #changes the dice image to a random die side when the user clicks on it
         if (self.width - 90) <= event.x <= self.width and self.height - 745 <= event.y <= self.height - 655:
             self.currDice = random.choice(self.dice)
 
+        #changes the notebook fill colors when the user clicks on the buttons on the right-hand side
         if self.width - 80 <= event.x <= self.width - 10 and self.height - 650 <= event.y <= self.height - 580:
             self.notepadFillColor = "green"
         if self.width - 80 <= event.x <= self.width - 10 and self.height - 560 <= event.y <= self.height - 490:
             self.notepadFillColor = "red"
        
+    #executes at the start of the game
     def timerFired(self):
+        #displays an input box for the user to choose their player color
         if self.choosePlayer == True:
             color = self.getUserInput("""Pick one of the following player colors: black, white, green, blue, red, purple.\n
             Then click on one of the gray boxes to choose your starting location""")
@@ -162,6 +178,7 @@ class MyApp(App):
         canvas.create_text(self.width / 2, self.topMargin / 2.5,
                         text = "CLUE!", font = "Arial 20 bold")
 
+    #draws buttons on the screen for instructions, notepad, answer, reset, correct, and wrong
     def drawButtons(self, canvas):
         canvas.create_oval(25, self.height - 75, 75, self.height - 25, 
                                 fill = "pink")
@@ -189,6 +206,7 @@ class MyApp(App):
         canvas.create_text(self.width - 45, self.height - 525, text = "WRONG",
                                 font = "Arial 14 bold")
 
+    #displays instructions when "HELP" button is clicked
     def instructions(self, canvas):
         if self.showInstructions == True:
             canvas.create_rectangle(100, 100, self.width - 100, self.height - 100,
@@ -211,6 +229,7 @@ class MyApp(App):
                     There you will make an accusation and will be told if you were right or wrong. If you were right, you win the game but either way the game ends at this point.""",
                     font = "Arial 15 bold")
 
+    #returns the row and column of a certain x,y coordinate
     def getBoardCell(self, x, y):
         row = int((y - self.topMargin) / self.cellHeight)
         col = int((x - self.leftMargin) / self.cellWidth)
@@ -225,7 +244,7 @@ class MyApp(App):
         y2 = y1 + self.cellHeight
         return x1, y1, x2, y2
 
-    #draws the grid
+    #draws the board grid
     def drawBoardGrid(self, canvas):
         for row in range(self.rows):
             for col in range(self.cols):
@@ -236,10 +255,12 @@ class MyApp(App):
                     self.fillColor = ""
                 canvas.create_rectangle(x1, y1, x2, y2, fill = self.fillColor)
 
+    #draws the algorithmic grid that displays the pathfinding
     def drawAlgorithmicBoard(self, canvas):
         for row in range(self.rows):
             for col in range(self.cols):
                 x1, y1, x2, y2 = self.getCellBounds(row, col)
+                #rooms, doors, stairs, and the center room must be their own colors
                 if (row,col) in self.roomsList:
                     canvas.create_rectangle(x1, y1, x2, y2, fill = self.roomColor)
                 elif (row,col) in self.doorsList:
@@ -250,11 +271,12 @@ class MyApp(App):
                     canvas.create_rectangle(x1, y1, x2, y2, fill = self.stair2color)
                 elif (row,col) in self.centerRoomList:
                     canvas.create_rectangle(x1, y1, x2, y2, fill = self.centerRoomColor)
+                #the path taken by the user is displayed as green
                 elif (row,col) in self.path:
                     canvas.create_rectangle(x1, y1, x2, y2, fill = "green")
                 canvas.create_rectangle(x1, y1, x2, y2)
 
-
+    #draws the notepad's grid so the user can fill in green and red
     def drawNotepadGrid(self, canvas):
         for row in range(self.suspectRows):
             canvas.create_rectangle(1275, 75 + 18.5 * row, 1290, 93.5 + 18.5 * row)
@@ -263,16 +285,16 @@ class MyApp(App):
         for row in range(self.roomsRows):
             canvas.create_rectangle(1274, 479 + 18.75 * row, 1289, 497.75 + 18.75 * row)
 
-
-    #draws the grid, title, buttons
+    #draws the grid, title, buttons, instructions, notepad, dice, and board
     def redrawAll(self, canvas):
-        # canvas.create_image(self.width / 2, self.height - 373,
-        #                         image = ImageTk.PhotoImage(self.boardScaled))
+        self.drawAlgorithmicBoard(canvas)
+        canvas.create_image(self.width / 2, self.height - 373,
+                                image = ImageTk.PhotoImage(self.boardScaled))
         canvas.create_image(self.width - 200, self.height / 2,
                                 image = ImageTk.PhotoImage(self.notepadScaled))
         canvas.create_image(self.width - 45, self.height - 700,
                                 image = ImageTk.PhotoImage(self.currDice))
-        self.drawAlgorithmicBoard(canvas)
+        
         self.drawNotepadGrid(canvas)
         self.drawBoardGrid(canvas)
         self.drawTitle(canvas)
@@ -282,12 +304,16 @@ class MyApp(App):
     #I used this website (https://www.raywenderlich.com/3016-introduction-to-a-pathfinding)
     #only to learn how the A* algorithm, however I wrote all of the following code myself
     def pathfinding(self, start, end):
+        #finds the shortest path from the user's position to where they wish to go
         openList = [start]
         scoreList = [0]
         closedList = []
         gScore = 0
         parentDict = {}
+        #will keep running until the end location is in the final path list or 
+        #there are no more possible squares
         while True:
+            #finds the square with the lowest f-score
             minScore = min(scoreList)
             minIndex = len(scoreList) - 1 - scoreList[::-1].index(minScore)
             currSquare = openList[minIndex]
@@ -295,13 +321,16 @@ class MyApp(App):
             openList.pop(minIndex)
             scoreList.pop(minIndex)
 
+            #break out of the loop if the end destination is in the closed list
             if end in closedList:
                 break
 
+            #find all eligible squares adjacent to the current location
             adjacentSquares = []
             (row, col) = currSquare
             for direction in [(-1,0), (0,-1), (1,0), (0,+1)]:
                 (newRow, newCol) = (row + direction[0], col + direction[1])
+                #square must be in the grid, and not a room, stair, or in the center room
                 if (newRow >= self.rows or newRow < 0 or newCol >= self.cols or newCol < 0 or 
                     (newRow, newCol) in self.roomsList or (newRow, newCol) in self.stair1list or 
                     (newRow, newCol) in self.stair2list or (newRow, newCol) in self.centerRoomList):
@@ -311,15 +340,18 @@ class MyApp(App):
                     
             gScore += 1
             
+            #for all adjacent squares, find the f-score
             for item in adjacentSquares:
                 if item in closedList:
                     continue
                 hScore = abs(end[0] - item[0]) + abs(end[1] - item[1])
                 fScore = gScore + hScore
+                #add square to the open list
                 if item not in openList:
                     parentDict[item] = currSquare
                     openList += [item]
                     scoreList += [fScore]
+                #if already in the open list, update list if new f-score is lower than old f-score
                 else:
                     itemIndex = openList.index(item)
                     oldFScore = scoreList[itemIndex]
@@ -330,9 +362,11 @@ class MyApp(App):
                         openList += [item]
                         scoreList += [fScore]
 
+            #if the open list is empty, there is no path
             if (openList == []):
                 break
         
+        #determine the shortest path by traversing the parent dictionary backwards
         path = [end]
         currParent = parentDict[end]
         currPoint = end
@@ -343,6 +377,7 @@ class MyApp(App):
         path += [start]
         return path
 
+    #choose an answer at random from all the given cards
     def allCards():
         allCards = {suspects: {'Col. Mustard', 'Prof. Plum', 'Mr. Green', 
                                 'Mrs. Peacock', 'Miss Scarlett', 'Mrs. White'},
