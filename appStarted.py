@@ -1,6 +1,3 @@
-from cmu_112_graphics import *
-import math, random
-
 class MyApp(App):
     def appStarted(self):
         #sets rows, columns, margins, and cell specifications for the board grids
@@ -64,6 +61,13 @@ class MyApp(App):
         self.white = self.scaleImage(self.loadImage('Images/Suspects/white.jpg'), 0.40)
         self.green = self.scaleImage(self.loadImage('Images/Suspects/green.jpg'), 0.40)
         self.peacock = self.scaleImage(self.loadImage('Images/Suspects/peacock.jpg'), 0.40)
+        self.scarlet = self.scaleImage(self.loadImage('Images/Suspects/scarlet.jpg'), 0.40)
+        self.mustard = self.scaleImage(self.loadImage('Images/Suspects/mustard.jpg'), 0.40)
+        self.plum = self.scaleImage(self.loadImage('Images/Suspects/plum.jpg'), 0.40)
+        self.allCards = {'suspects': [self.white, self.green, self.peacock, self.scarlet, self.mustard, self.plum],
+                        'weapons': [self.candlestick, self.revolver, self.leadPipe, self.rope, self.knife, self.wrench],
+                        'rooms': [self.library, self.diningRoom, self.lounge, self.ballroom, self.billiardRoom,
+                                self.hall, self.kitchen, self.conservatory, self.study]}
 
         #setting initial board and player values
         self.playerColor = "black"
