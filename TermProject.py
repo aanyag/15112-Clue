@@ -119,6 +119,7 @@ class MyApp(App):
         self.playerPosition = (-1, -1)
         self.playerCards = set()
         self.playerGuess = []
+        self.allowPlayerGuess = False
         self.playerRoom = ""
         self.playerTurn = False
         self.playerResponse = ""
@@ -126,11 +127,12 @@ class MyApp(App):
         self.weaponBox = (0, 0, 0, 0)
 
         #computer values
-        self.computerColor = "orange"
+        self.computerColor = "brown"
         self.computerPosition = (-1, -1)
         self.computerCards = set()
         self.computerChoices = {'suspects': set(), 'weapons': set(), 'rooms': set()}
         self.computerGuess = []
+        self.allowComputerGuess = False
         self.computerRoom = 'hall'
         self.showComputerGuess = False
         self.computerAnswer = []
@@ -233,11 +235,12 @@ class MyApp(App):
                     self.playerPosition = (boardRow, boardCol)
                     self.startingSquares.remove((boardRow, boardCol))
                     self.computerPosition = random.choice(self.startingSquares)
-                    self.gameStart = False
                     self.playerTurn = True
+                    self.gameStart = False
             if self.playerTurn:
                 if (boardRow, boardCol) in self.roomsList:
-                    self.playerMove(self.getDoor(boardRow, boardCol))
+                    self.playerRoom = self.getRoom(boardRow, boardCol)
+                    self.playerMove(self.getDoor(self.playerRoom, self.playerPosition))
 
         #if the player clicks on the buttons, the boolean for that button becomes the oppposite
         #(true to false or false to true)
@@ -252,8 +255,7 @@ class MyApp(App):
 
         #changes the dice image to a random die side when the user clicks on it
         if (self.width - 90) <= event.x <= self.width and self.height - 745 <= event.y <= self.height - 655:
-            self.currDiceValue = random.randint(1, 6)
-            self.currDice = self.diceDict[self.currDiceValue]
+            self.rollDice()
 
         #changes the notebook fill colors when the user clicks on the buttons on the right-hand side
         if self.width - 80 <= event.x <= self.width - 10 and self.height - 650 <= event.y <= self.height - 580:
@@ -294,14 +296,18 @@ class MyApp(App):
             self.setRoomLayout()
 
         #click to make a guess or accusation
-        if self.width - 80 <= event.x <= self.width - 10 and self.height - 470 <= event.y <= self.height - 400:
-            self.showGuessScreen = not self.showGuessScreen
+        if self.width - 80 <= event.x <= self.width - 10 and self.height - 470 <= event.y <= self.height - 400 and self.allowPlayerGuess:
+            self.showGuessScreen = True
             self.showTruth = False
+        #submit guess
         if self.width - 200 <= event.x <= self.width - 50 and 50 <= event.y <= 100 and self.showGuessScreen:
             self.showGuessScreen = False
             self.showTruth = True
             self.setPlayerGuess()
             self.setComputerResponse()
+        if self.width - 300 <= event.x <= self.width - 200 and 200 <= event.y <= 250:
+            self.showTruth = False
+            self.allowPlayerGuess = False
         if self.width - 80 <= event.x <= self.width - 10 and self.height - 380 <= event.y <= self.height - 310:
             self.showAccusationScreen = not self.showAccusationScreen
         if self.width - 80 <= event.x <= self.width - 10 and self.height - 290 <= event.y <= self.height - 220:
@@ -354,6 +360,8 @@ class MyApp(App):
             self.setComputerChoices()
             self.setRoomsList()
             self.gameStart = True
+        if self.gameStart == False and self.playerTurn == False and self.allowPlayerGuess == False:
+            self.computerMove()
             
     #draws the title on the top of the screen
     def drawTitle(self, canvas):
@@ -588,8 +596,9 @@ class MyApp(App):
                                             fill = "red")
             canvas.create_text(self.width/2, 250, text = "The Computer Has ...",
                                             font = "Arial 30 bold")
-            canvas.create_text(self.width/2, 400, text = self.computerResponse,
-                                            font = "Arial 30 bold")
+            canvas.create_image(self.width/2, 450, image = ImageTk.PhotoImage(self.allImages[self.computerResponse]))
+            canvas.create_rectangle(self.width - 300, 200, self.width - 200, 250, fill = "black")
+            canvas.create_text(self.width - 250, 225, text = "CLOSE", fill = "white")
 
     #choose an answer at random from all the given cards
     def setAnswer(self):
@@ -598,36 +607,61 @@ class MyApp(App):
         room = random.sample(self.rooms, 1)
         self.answer += (suspect + weapon + room)
 
-    #gets the door of the room
-    def getDoor(self, clickRow, clickCol):
+    def getRoom(self, clickRow, clickCol):
         for key in self.roomsDict:
             if (clickRow, clickCol) in self.roomsDict[key][1]:
-                self.playerRoom = self.roomsDict[key][0]
+                return self.roomsDict[key][0]
+    
+    #gets the door of the room
+    def getDoor(self, room, currentPosition):
+        for key in self.roomsDict:
+            if self.roomsDict[key][0] == room:
                 doors = self.roomsDict[key][2]
                 break
         if len(doors) == 1:
             closestDoor = doors[0]
         else:
-            shortestPath = self.pathfinding(self.playerPosition, doors[0])
+            shortestPath = self.pathfinding(currentPosition, doors[0])
             for door in doors:
-                currPath = self.pathfinding(self.playerPosition, door)
-                if len(currPath) <= len(shortestPath):
+                currPath = self.pathfinding(currentPosition, door)
+                if currPath == []:
+                    return currentPosition
+                elif len(currPath) <= len(shortestPath):
                     shortestPath = currPath
             closestDoor = shortestPath[0]
         return closestDoor
 
     def playerMove(self, destination):
         path = self.pathfinding(self.playerPosition, destination)
-        if len(path) - 1 <= self.currDiceValue:
+        if path == []:
+            pass
+        elif len(path) - 1 <= self.currDiceValue:
             self.playerPosition = path[0]
             self.playerTurn = False
-            self.playerGuess = True
+            self.allowPlayerGuess = True
         else:
             self.playerPosition = path[(self.currDiceValue + 1) * -1]
             self.playerTurn = False
 
+    def rollDice(self):
+        self.currDiceValue = random.randint(1, 6)
+        self.currDice = self.diceDict[self.currDiceValue]
+        
     def computerMove(self):
-
+        self.rollDice()
+        if self.computerRoom == "":
+            self.computerRoom = random.sample(self.computerChoices['rooms'], 1)[0]
+        destination = self.getDoor(self.computerRoom, self.computerPosition)
+        path = self.pathfinding(self.computerPosition, destination)
+        if path == []:
+            pass
+        elif len(path) - 1 <= self.currDiceValue:
+            self.computerPosition = path[0]
+            self.allowComputerGuess = True #can delete?
+            self.setComputerGuess()
+        else:
+            self.computerPosition = path[(self.currDiceValue + 1) * -1]
+            self.playerTurn = True
 
     #deals 9 random cards to the player
     def getPlayerCards(self):
@@ -683,14 +717,13 @@ class MyApp(App):
         self.computerChoices['suspects'] = suspects
         self.computerChoices['weapons'] = weapons
 
-    def computerChooseRoom(self):
-        pass
-
     def setComputerGuess(self):
         suspect = random.sample(self.computerChoices['suspects'], 1)
         weapon = random.sample(self.computerChoices['weapons'], 1)
         self.computerGuess += (suspect + weapon)
         self.computerGuess.append(self.computerRoom)
+        self.computerRoom = ""
+        self.playerTurn = True
 
     def processPlayerAnswer(self):
         if self.playerResponse == "none":
@@ -708,12 +741,11 @@ class MyApp(App):
             self.computerReadyToAnswer = True
     
     def setComputerResponse(self):
-        self.computerResponse = ""
+        self.computerResponse = "None of the Cards"
         for guess in self.playerGuess:
             if guess in self.computerCards:
                 self.computerResponse = guess
                 break
-        self.computerResponse = "None of the Cards"
 
     def playerAnswer(self):
         pass
@@ -776,6 +808,8 @@ class MyApp(App):
     #I used this website (https://www.raywenderlich.com/3016-introduction-to-a-pathfinding)
     #only to learn how the A* algorithm, however I wrote all of the following code myself
     def pathfinding(self, start, end):
+        if start == end:
+            return []
         #finds the shortest path from the user's position to where they wish to go
         openList = [start]
         scoreList = [0]
