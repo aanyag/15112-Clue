@@ -1,6 +1,13 @@
 from cmu_112_graphics import *
 import math, random, copy
 
+#OVERALL CITATIONS:
+#cmu_112_graphics and its methods were used for this program, learned from the animations notes on the 112 website
+#downloaded the cmu_112_graphics file from https://www.cs.cmu.edu/~112/notes/notes-animations-part3.html#ioMethods
+#learned the App Class from https://www.cs.cmu.edu/~112/notes/notes-animations-part3.html#ioMethods
+#the font "Arial", font sizes, and fill colors were learned from https://www.cs.cmu.edu/~112/notes/notes-graphics.html
+#all random functions were learned from https://docs.python.org/3/library/random.html
+
 class MyApp(App):
     def appStarted(self):
         #sets rows, columns, margins, and cell specifications for the board grids
@@ -52,6 +59,10 @@ class MyApp(App):
         self.gameStart = False
         self.gameOver = False
 
+        #CITATIONS: all image functions were learned during the optional lecture notes "Optional: Images with PIL + Using the App Class"
+        #the clue logo image is from https://i.pinimg.com/originals/64/98/8e/64988ea34c1135dec17c0780e5434caa.jpg
+        self.clueLogo = self.loadImage('Images/clueLogo.png')
+        self.clueLogoScale = self.scaleImage(self.clueLogo, 0.45)
         #The game board image is from https://i.pinimg.com/originals/76/a2/4f/76a24fda5952a89008dcb15ae71df4ef.jpg
         #(I edited the image a little myself before importing it)
         self.boardImage = self.loadImage('Images/gameboard without names.png')
@@ -138,6 +149,7 @@ class MyApp(App):
         self.answer = []
         
         #player values
+        self.choosePlayer = True
         self.playerColor = "black"
         self.playerPosition = (-1, -1)
         self.playerCards = set()
@@ -153,6 +165,7 @@ class MyApp(App):
         self.playerAccusation = []
         self.playerReadyToAccuse = False
         self.playerWon = False
+        self.playerFirstTurn = True
 
         #computer values
         self.computerColor = "brown"
@@ -168,7 +181,6 @@ class MyApp(App):
         self.computerWon = False
 
         #setting initial board values
-        self.choosePlayer = True
         self.fillColor = ""
         self.startingSquares = [(5,0),(18,0),(24,9),(24,14),(0,16),(7,23)]
         #sets all rooms as grey on the algorithmic grid
@@ -268,7 +280,7 @@ class MyApp(App):
                     self.playerRollDice = 0
                     self.gameStart = False
             #if it's the player's turn, it moves the players towards the room they clicked on
-            if self.playerTurn:
+            if self.playerTurn and self.playerRollDice == 2:
                 if (boardRow, boardCol) in self.roomsList:
                     self.playerRoom = self.getRoom(boardRow, boardCol)
                     self.playerMove(self.getDoor(self.playerRoom, self.playerPosition))
@@ -306,7 +318,7 @@ class MyApp(App):
         #changes the dice image to a random die side when the user clicks on it
         if ((self.width - 90) <= event.x <= self.width and self.height - 745 <= event.y <= self.height - 655 and
                 self.showGuessScreen == False and self.showAccusationScreen1 == False and 
-                self.showAccusationScreen2 == False and self.playerTurn):
+                self.showAccusationScreen2 == False and self.playerTurn and self.playerRollDice < 2):
             self.playerRollDice += 1
 
         #allows the user to change the room layout
@@ -360,9 +372,6 @@ class MyApp(App):
         #player clicks when they are ready to accuse
         if self.width - 80 <= event.x <= self.width - 10 and self.height - 470 <= event.y <= self.height - 400:
             self.playerReadyToAccuse = True
-        #shows the final accusation screen with suspects and weapons
-        if self.width - 80 <= event.x <= self.width - 10 and self.height - 380 <= event.y <= self.height - 310 and self.playerReadyToAccuse:
-            self.showAccusationScreen1 = True
         #shows the final accusation screen with rooms
         if (self.width - 200 <= event.x <= self.width - 50 and 50 <= event.y <= 100 and 
             self.showAccusationScreen1 and self.showAccusationScreen2 == False):
@@ -375,9 +384,6 @@ class MyApp(App):
             self.setPlayerAccusation()
             self.checkPlayerAccusation()
             self.showAccusationScreen2 = False
-        #shows the change room layout screen
-        if self.width - 80 <= event.x <= self.width - 10 and self.height - 290 <= event.y <= self.height - 220:
-            self.showRoomLayoutScreen = True
         #allows the user to respond to the computer's guess
         if 25 <= event.x <= 275 and 25 <= event.y <= 225 and self.allowPlayerResponse:
             self.createPlayerResponse()
@@ -433,32 +439,35 @@ class MyApp(App):
 
     #executes at the start of the game
     def timerFired(self):
-        #displays an input box for the user to choose their player color
-        if self.choosePlayer == True:
-            color = ""
-            while color != "black" and color != "white" and color != "green" and color != "blue" and color != "red" and color != "purple":
-                color = self.getUserInput("""Pick one of the following player colors: black, white, green, blue, red, purple.\n
-                Then click on one of the six starting squares to choose your beginning location""")
-                color = color.lower()
-            self.playerColor = color
-            self.choosePlayer = False
-            #sets the answer, the player's cards, the computer's card, the computer's choices to guess from
-            self.setAnswer()
-            self.playerCards = self.getPlayerCards()
-            self.computerCards = self.getComputerCards()
-            self.setComputerChoices()
-            self.setRoomsList()
-            self.gameStart = True
-        #allows the computer to roll the die and move if the player has moved and guessed
-        if (self.gameStart == False and self.playerTurn == False 
-            and self.allowPlayerGuess == False and self.allowPlayerResponse == False):
-            self.rollDice()
-            self.computerMove()
-        #die keeps rolling until player stops it
-        #player can only roll once
-        if self.playerRollDice == 1:
-            self.rollDice()
-            
+        if self.showRoomLayoutScreen == False:
+            #displays an input box for the user to choose their player color
+            #citation: the input box method was learned during the optional lecture "Optional: Images with PIL + Using the App Class"
+            if self.choosePlayer == True:
+                color = ""
+                while color != "black" and color != "white" and color != "green" and color != "blue" and color != "red" and color != "purple":
+                    color = self.getUserInput("""\
+                        Pick one of the following player colors: black, white, green, blue, red, purple.\n
+                        Then click on one of the six starting squares to choose your beginning location""")
+                    color = color.lower()
+                self.playerColor = color
+                self.choosePlayer = False
+                #sets the answer, the player's cards, the computer's card, the computer's choices to guess from
+                self.setAnswer()
+                self.playerCards = self.getPlayerCards()
+                self.computerCards = self.getComputerCards()
+                self.setComputerChoices()
+                self.setRoomsList()
+                self.gameStart = True
+            #allows the computer to roll the die and move if the player has moved and guessed
+            if (self.gameStart == False and self.playerTurn == False 
+                and self.allowPlayerGuess == False and self.allowPlayerResponse == False):
+                self.rollDice()
+                self.computerMove()
+            #die keeps rolling until player stops it
+            #player can only roll once
+            if self.playerRollDice == 1:
+                self.rollDice()
+
     #draws the title on the top of the screen
     def drawTitle(self, canvas):
         canvas.create_text(self.width / 2, self.topMargin / 2.5,
@@ -473,7 +482,7 @@ class MyApp(App):
         canvas.create_text(50, self.height - 50, text = "HELP",
                                 font = "Arial 15 bold")
         canvas.create_oval(100, self.height - 75, 150, self.height - 25, 
-                                fill = "light blue")
+                                fill = "light yellow")
         canvas.create_text(125, self.height - 50, text = "CARDS",
                                 font = "Arial 13 bold")
         canvas.create_oval(175, self.height - 75, 225, self.height - 25, 
@@ -493,59 +502,126 @@ class MyApp(App):
                                 fill = "magenta")
         canvas.create_text(self.width - 45, self.height - 435, text = "READY\nTO\nACCUSE",
                                 font = "Arial 12 bold")
-        canvas.create_oval(self.width - 80, self.height - 380, self.width - 10, self.height - 310, 
-                                fill = "blue")
-        canvas.create_text(self.width - 45, self.height - 345, text = "ACCUSE",
-                                font = "Arial 14 bold")
-        canvas.create_oval(self.width - 80, self.height - 290, self.width - 10, self.height - 220, 
-                                fill = "gold")
-        canvas.create_text(self.width - 45, self.height - 255, text = "CHANGE\nROOM\nLAYOUT",
-                                font = "Arial 12 bold")
 
     #displays instructions when "HELP" button is clicked
-    #instructions taken from https://www.fgbradleys.com/rules/Clue.pdf
+    #citation: instructions adapted from https://www.fgbradleys.com/rules/Clue.pdf
     def instructions(self, canvas):
         if self.showInstructions:
-            canvas.create_rectangle(100, 100, self.width - 100, self.height - 100,
+            canvas.create_rectangle(200, 100, self.width - 200, self.height - 100,
                                         fill = "pink")
             canvas.create_text(self.width / 2, 125, text = "Instructions!",
                                         font = "Arial 30 bold")
-            canvas.create_text(self.width/2, self.height/2, text = """\
-                    Mr. John Boddy, the owner of Tudor Mansion has been found murdered inside his home. The object of the game is to determine the killer, the murder weapon, and the room in which the murder occurred.\n
-                    Step 1: Take turns rolling the die to choose who goes first- the highest number goes first and then you go 
-                    counterclockwise from there.\n
-                    Step 2: Roll the die to determine the number of spaces you can move. 
-                    You may not move diagonally and can only enter a room through spaces that have doors.
-                    Once you have entered a room, you cannot move any further on the same turn. 
-                    If the room you are currently in has a secret passage, you may move through the secret passage to the next room instead of rolling the die on your turn.\n
-                    Step 3: When you enter a room, you can, but do not have to, make a suggestion for who you think is the killer and their murder weapon. 
-                    The room that you suggest must be the current room you are in.\n
-                    Step 4: After a suggestion is made, each of the other players will try to prove your suggestion to be false. 
-                    They will look at their cards for one of the three accusations you made and if they have one of them, they will tell you which card.\n
-                    Step 5: If you believe that you have solved the killer, the murder weapon, and the room in which the murder occurred, you must enter the center room on the board.
-                    There you will make an accusation and will be told if you were right or wrong. If you were right, you win the game but either way the game ends at this point.""",
-                    font = "Arial 15 bold")
+            canvas.create_text(self.width/2, self.height/2, text = """ \n
 
+                    Mr. John Boddy, the owner of Tudor Mansion has been found murdered inside his home.
+                    The object of the game is to determine the killer, the murder weapon, and the room in which the murder occurred.\n
+                    You and the computer will each receive 9 cards. 3 cards will be placed in the answer button, and so neither 
+                    you nor the computer have those 3 cards. Those 3 cards will hold the answer to the suspect, weapon, and 
+                    room of the murder. Through guesses and process of elimination, you must guess these three cards.
+                
+                    Step 1: Roll the dice to move. You may not move diagonally and can only enter a room through the doors.
+                            After rolling, click on the room you wish to go to, and you will automatically be moved
+                            along the shortest path to that room's doors. \n
+                    Step 2: Once you have entered a room, you may not move any more spaces. You will then make a guess
+                            as to the suspect, weapon, and room were chosen as the answer. Keep in mind that your current room
+                            will automatically be stored as the room for your guess. \n
+                    Step 3: When leaving a room, if your room has a secret passage you may use that to go to the
+                            diagonally opposite room on the board.\n
+                    Step 4: When the computer has entered a room and has made a guess, you must respond to the guess by
+                            revealing if you hold any of the cards the computer has guessed. You only have to reveal one
+                            card on each turn.\n
+                    Step 5: If you believe you know the correct answer, you may click the "Ready to Accuse" button.
+                            You will then be moved towards the center room automatically. Once in the center room, you
+                            will be able to enter your accusation. The last screen will reveal if you got the correct answer
+                            or not. You may only make one guess in the game, so the game will end whether or not you are correct.
+                            Remember the aim of the game is to get the correct accusation for suspect, weapon, and room
+                            before the computer is able to figure it out! \n
+                                                                        GOOD LUCK AND HAVE FUN! """,
+                    font = "Arial 16 bold", anchor = "center")
+
+    #writes out instructions for the player as they play each step of the game
+    def drawSideInstructions(self, canvas):
+        if self.gameStart:
+            canvas.create_text(100, 400, text = """\
+                        Click on one of the six labeled
+                        starting locations on the board""", font = "Arial 20 bold")
+        elif (self.gameStart == False and self.playerRollDice == 0 and self.playerTurn and 
+            self.playerReadyToAccuse == False and self.playerFirstTurn):
+            canvas.create_text(100, 400, text = """\
+                        Click on the die to start rolling it.
+                        Click again to stop the die.
+                        The die face to see is how
+                        many steps you may move.""", font = "Arial 20 bold")
+        elif (self.gameStart == False and self.playerRollDice == 0 and self.playerTurn and 
+            self.playerReadyToAccuse == False and self.playerFirstTurn == False):
+            canvas.create_text(100, 400, text = """\
+                        The computer has finished its turn.
+                        Click on the die to start rolling it.
+                        Click again to stop the die.
+                        The die face to see is how
+                        many steps you may move.
+                        If you are ready to accuse,
+                        click the magenta "Ready to 
+                        Accuse" button.""", font = "Arial 18 bold")
+        elif (self.playerRollDice == 2 and self.allowPlayerGuess == False and 
+            self.allowComputerGuess == False and self.playerReadyToAccuse == False):
+            canvas.create_text(100, 400, text = """\
+                        Click on one of the nine labeled
+                        rooms that you wish to enter.
+                        You will automatically move
+                        towards its door.""", font = "Arial 20 bold")
+        elif self.allowPlayerGuess and self.playerReadyToAccuse == False:
+            canvas.create_text(100, 400, text = """\
+                        You have entered a room!
+                        Click on the orange "GUESS"
+                        button on the right side of 
+                        the screen. Then, click on the 
+                        suspect and weapon you would 
+                        like to guess. Your current
+                        room will be automatically used 
+                        as your guess's room.""", font = "Arial 20 bold")
+        elif self.allowPlayerResponse:
+            canvas.create_text(100, 400, text = """\
+                        The computer is in a room 
+                        and has made a guess! Click 
+                        on the "Answer the Computer's
+                        Guess" button to respond to 
+                        the computer's guess.""", font = "Arial 20 bold")
+        elif self.playerReadyToAccuse:
+            canvas.create_text(100, 400, text = """\
+                        You are ready to accuse!
+                        Continue rolling the die
+                        as before! Click on the center
+                        room and you will be
+                        automatically moved there.
+                        Once in the center room,
+                        enter your accusation for
+                        suspect, weapon, and room.
+                        Let's see if you are correct!""", font = "Arial 20 bold")
+
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the row and column of a certain x,y coordinate of the game board
     def getBoardCell(self, x, y):
         row = int((y - self.topMargin) / self.cellHeight)
         col = int((x - self.leftMargin) / self.cellWidth)
         return (row, col)
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the bounds for each singular cell on the game board
     #depends on board margins, height and width of the canvas, and total rows and columns
-    def getCellBounds(self, row, col):
+    def getBoardCellBounds(self, row, col):
         x1 = self.leftMargin + col * self.cellWidth
         y1 = self.topMargin + row * self.cellHeight
         x2 = x1 + self.cellWidth
         y2 = y1 + self.cellHeight
         return x1, y1, x2, y2
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #draws the board grid
     def drawBoardGrid(self, canvas):
         for row in range(self.rows):
             for col in range(self.cols):
-                x1, y1, x2, y2 = self.getCellBounds(row, col)
+                x1, y1, x2, y2 = self.getBoardCellBounds(row, col)
                 if self.playerPosition == (row, col):
                     self.fillColor = self.playerColor
                 elif self.computerPosition == (row, col):
@@ -554,21 +630,25 @@ class MyApp(App):
                     self.fillColor = ""
                 canvas.create_rectangle(x1, y1, x2, y2, fill = self.fillColor, outline = '')
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the row and column of the suspects grid of the notebook
     def getSuspectCell(self, x, y):
         row = int((y - self.suspectTopMargin) / self.suspectCellHeight)
         return (row, 0)
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the row and column of the weapons grid of the notebook
     def getWeaponCell(self, x, y):
         row = int((y - self.weaponTopMargin) / self.weaponCellHeight)
         return (row, 0)
     
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the row and column of the rooms grid of the notebook
     def getRoomCell(self, x, y):
         row = int((y - self.roomTopMargin) / self.roomCellHeight)
         return (row, 0)
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the bounds for each singular cell on the suspects grid of the notebook
     def getSuspectCellBounds(self, row, col):
         x1 = self.nbLeftMargin + col * self.nbCellWidth
@@ -577,6 +657,7 @@ class MyApp(App):
         y2 = y1 + self.suspectCellHeight
         return x1, y1, x2, y2
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the bounds for each singular cell on the weapons grid of the notebook
     def getWeaponCellBounds(self, row, col):
         x1 = self.nbLeftMargin + col * self.nbCellWidth
@@ -585,6 +666,7 @@ class MyApp(App):
         y2 = y1 + self.weaponCellHeight
         return x1, y1, x2, y2
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #returns the bounds for each singular cell on the rooms grid of the notebook
     def getRoomCellBounds(self, row, col):
         x1 = self.nbLeftMargin + col * self.nbCellWidth
@@ -593,6 +675,7 @@ class MyApp(App):
         y2 = y1 + self.roomCellHeight
         return x1, y1, x2, y2
 
+    #citation: I learned about grid functions from (https://www.cs.cmu.edu/~112/notes/notes-animations-part1.html#exampleGrids)
     #draws the notebooks's 3 grids so the user can fill in green and red
     def drawNotebookGrid(self, canvas):
         for col in range(self.notebookCols):
@@ -627,11 +710,11 @@ class MyApp(App):
     #draws the screen that allows the player to change the room layout
     def drawChangeRoomLayoutScreen(self, canvas):
         if self.showRoomLayoutScreen:
-            canvas.create_rectangle(75, 75, self.width - 75, self.height - 75, fill = "gold")
-            canvas.create_text(self.width/2, 125, text = "Change Room Layout!", font = "Arial 30 bold")
+            canvas.create_rectangle(0, 0, self.width, self.height, fill = "gold")
+            canvas.create_image(1000, 115, image = ImageTk.PhotoImage(self.clueLogoScale))
             canvas.create_rectangle(self.width - 200, self.height - 150, self.width - 100, self.height - 100,
                                 fill = "black")
-            canvas.create_text(self.width - 150, self.height - 125, text = "DONE", fill = "white")
+            canvas.create_text(self.width - 150, self.height - 125, text = "START", fill = "white")
             canvas.create_image(400, self.height / 2 + 25, image = ImageTk.PhotoImage(self.changeBoardScaled))
             canvas.create_text(210, 205, text = "1", font = "Arial 30 bold", fill = "red")
             canvas.create_text(400, 240, text = "2", font = "Arial 30 bold", fill = "red")
@@ -642,11 +725,13 @@ class MyApp(App):
             canvas.create_text(200, 600, text = "7", font = "Arial 30 bold", fill = "red")
             canvas.create_text(400, 575, text = "8", font = "Arial 30 bold", fill = "red")
             canvas.create_text(600, 590, text = "9", font = "Arial 30 bold", fill = "red")
-            canvas.create_text(925, 250, text = """\
-                                Following the order of the rooms to the left,\n
-                                click on the rooms below in the order you would like them to appear\n
+            canvas.create_text(950, 275, text = """\
+                                Welcome to CLUE!!
+                                Before we begin, please select your room layout.
+                                Following the order of the rooms to the left,
+                                click on the rooms below in the order you would like them to appear
                                 (first click the room you want room 1 to be and click room 9 last).""",
-                                font = "Arial 18 bold")
+                                font = "Arial 20 bold")
             if self.showHall:
                 canvas.create_rectangle(750, 350, 900, 400, fill = "black")
                 canvas.create_text(825, 375, text = "HALL", fill = "white")
@@ -696,6 +781,7 @@ class MyApp(App):
             canvas.create_text(1000, 660, text = self.roomLayoutList[8], font = "Arial 25 bold", fill = "red")
 
     #choose an answer at random from all the given cards
+    #citation for random at top of file
     def setAnswer(self):
         suspect = random.sample(self.suspects, 1)
         weapon = random.sample(self.weapons, 1)
@@ -716,6 +802,7 @@ class MyApp(App):
                 location += 320
 
     #deals 9 random cards to the player
+    #learned about the difference method from https://www.geeksforgeeks.org/python-set-difference/
     def getPlayerCards(self):
         elligibleCards = self.allCards.difference(self.answer)
         return set(random.sample(elligibleCards, int(len(elligibleCards)/2)))
@@ -738,6 +825,7 @@ class MyApp(App):
                 location += 250
 
     #gives the computer the cards the player and the answer do not have
+    #learned about the difference method from https://www.geeksforgeeks.org/python-set-difference/
     def getComputerCards(self):
         self.computerCards = self.allCards.difference(self.playerCards)
         return self.computerCards.difference(self.answer)
@@ -775,13 +863,17 @@ class MyApp(App):
             closestDoor = shortestPath[0]
         return closestDoor
 
+    #checks to see if the player and computer can use the staircases
+    def useStaircase(self, position, destination):
+        return ((position in self.roomsDict[1][2] and destination in self.roomsDict[9][2])
+            or (position in self.roomsDict[9][2] and destination in self.roomsDict[1][2])
+            or (position in self.roomsDict[3][2] and destination in self.roomsDict[7][2])
+            or (position in self.roomsDict[7][2] and destination in self.roomsDict[3][2]))
+
     #moves the player towards a room depending on their die roll value
     def playerMove(self, destination):
         #if the player is in a room with a staircase, it can go to the diagonally opposite room
-        if ((self.playerPosition in self.roomsDict[1][2] and destination in self.roomsDict[9][2])
-            or (self.playerPosition in self.roomsDict[9][2] and destination in self.roomsDict[1][2])
-            or (self.playerPosition in self.roomsDict[3][2] and destination in self.roomsDict[7][2])
-            or (self.playerPosition in self.roomsDict[7][2] and destination in self.roomsDict[3][2])):
+        if self.useStaircase(self.playerPosition, destination):
             self.playerPosition = destination
             self.playerTurn = False
             self.allowPlayerGuess = True
@@ -804,6 +896,7 @@ class MyApp(App):
             else:
                 self.playerPosition = path[(self.currDiceValue + 1) * -1]
                 self.playerTurn = False
+        self.playerFirstTurn = False
 
     #draws the screen to make a guess when player is in a room
     def drawGuessScreen(self, canvas):
@@ -1015,16 +1108,21 @@ class MyApp(App):
         path = self.pathfinding(self.computerPosition, destination)
         if path == []:
             self.computerRoom = ""
+        #checks if computer can use a staircase to move diagonally across the board
+        elif self.useStaircase(self.computerPosition, destination):
+            self.computerPosition = destination
+            self.allowComputerGuess = True
+            self.setComputerGuess()
         #if the die value is greater than the steps it takes to get to the room,
         #the computer is in the room and they can make a guess
         elif len(path) - 1 <= self.currDiceValue:
             self.computerPosition = path[0]
             self.allowComputerGuess = True
             self.setComputerGuess()
-            #if the computer is in the center room, it automatically won as it has the correct answer
+            #if the computer is in the center room, the game is over
             if self.computerPosition == self.centerDoor:
-                self.computerWon = True
                 self.gameOver = True
+                self.checkComputerAccusation()
         #if the die value is less than the steps it takes to get to the room,
         #the computers moves the number of steps the die shows
         else:
@@ -1035,10 +1133,12 @@ class MyApp(App):
 
     #sets the computer choices as all the cards the computer does not already have
     def setComputerChoices(self):
+        #learned copy.deepcopy from https://www.cs.cmu.edu/~112/notes/notes-2d-lists.html#copying
         rooms = copy.deepcopy(self.rooms)
         suspects = copy.deepcopy(self.suspects)
         weapons = copy.deepcopy(self.weapons)
         for card in self.computerCards:
+            #learned discard method from https://www.programiz.com/python-programming/methods/set/discard
             rooms.discard(card)
             suspects.discard(card)
             weapons.discard(card)
@@ -1074,6 +1174,8 @@ class MyApp(App):
     def createPlayerResponse(self):
         #the input must be a card in both the computer's guess and and the player's cards
         #if there is no such card, the player responds 'none'
+        #the input box method was learned during the optional lecture "Optional: Images with PIL + Using the App Class"
+        #while the topic was learned in the lecture, the following code is my own
         while ((self.playerResponse not in self.playerCards 
             or self.playerResponse not in self.computerGuess) 
             and self.playerResponse != 'none'):
@@ -1126,6 +1228,7 @@ class MyApp(App):
             self.computerReadyToAnswer = True
         #otherwise, it removes the player's response from the computer's choices since the answer cannot be that card
         else:
+            #learned discard method from https://www.programiz.com/python-programming/methods/set/discard
             self.computerChoices['suspects'].discard(self.playerResponse)
             self.computerChoices['weapons'].discard(self.playerResponse)
             self.computerChoices['rooms'].discard(self.playerResponse)
@@ -1153,13 +1256,20 @@ class MyApp(App):
         if '' not in self.computerAnswer:
             self.computerReadyToAnswer = True
 
+    #checks if the computer's accusation is the correct answer
+    #computer has won if it is, lost if it isn't as the game is now over
+    def checkComputerAccusation(self):
+        self.gameOver = True
+        if self.computerAnswer == self.answer:
+            self.computerWon = True
+
     #displays the final answer and who won!!!
     def drawFinalScreen(self, canvas):
         if self.gameOver:
             canvas.create_rectangle(100, 100, self.width - 100, self.height - 100,
                                         fill = "white")
-            canvas.create_text(self.width / 2, 200, text = "Answer!",
-                                        font = "Arial 30 bold")
+            canvas.create_text(self.width / 2, 225, text = "Answer!",
+                                        font = "Arial 16 bold")
             location = 400
             #displays the correct answer
             for answer in self.answer:
@@ -1168,17 +1278,22 @@ class MyApp(App):
                 location += 320
             #displays who won and the accusation made
             if self.playerWon:
-                canvas.create_text(self.width/2, 150, text = "You Won!")
+                canvas.create_text(self.width/2, 150, text = "You Won!", font = "Arial 30 bold")
                 canvas.create_text(self.width/2, self.height - 150, text = f'You guessed {self.playerAccusation}')
             elif self.computerWon:
-                canvas.create_text(self.width/2, 150, text = "Computer Won!")
+                canvas.create_text(self.width/2, 150, text = "Computer Won!", font = "Arial 30 bold")
+                canvas.create_text(self.width/2, self.height - 150, text = f'Computer guessed {self.computerAnswer}')
+            elif self.computerWon == False and self.playerAccusation == []:
+                canvas.create_text(self.width/2, 150, text = "Computer lost!", font = "Arial 30 bold")
                 canvas.create_text(self.width/2, self.height - 150, text = f'Computer guessed {self.computerAnswer}')
             else:
-                canvas.create_text(self.width/2, 150, text = "You lost!")
+                canvas.create_text(self.width/2, 150, text = "You lost!", font = "Arial 30 bold")
                 canvas.create_text(self.width/2, self.height - 150, text = f'You guessed {self.playerAccusation}')
 
     #draws the grids, title, buttons, all the screens, notebook, dice, and board
     def redrawAll(self, canvas):
+        #background of the game
+        canvas.create_rectangle(0, 0, self.width, self.height, fill = "light blue")
         #draws the board, notebook, and die
         canvas.create_image(self.width / 2, self.height - 373,
                                 image = ImageTk.PhotoImage(self.boardScaled))
@@ -1189,6 +1304,7 @@ class MyApp(App):
         self.drawNewRooms(canvas)
         self.drawComputerGuess(canvas)
         self.drawPlayerResponseButton(canvas)
+        self.drawSideInstructions(canvas)
         self.drawNotebookGrid(canvas)
         self.drawBoardGrid(canvas)
         self.drawTitle(canvas)
@@ -1234,7 +1350,7 @@ class MyApp(App):
                 directions.append((-1, 0))
         directions.append((directions[0][0] * -1, directions[0][1] * -1))
         directions.append((directions[1][0] * -1, directions[1][1] * -1))
-        return directions
+        return directions[::-1]
                 
     #I used this website (https://www.raywenderlich.com/3016-introduction-to-a-pathfinding)
     #only to learn how the A* algorithm, however I wrote all of the following code myself
